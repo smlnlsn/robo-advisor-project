@@ -10,7 +10,7 @@ import json
 import requests
 import pandas as pd
 import datetime
-#from alpha_vantage.timeseries import TimeSeries
+import matplotlib.pyplot as plt
 
 def get_latest_day(data):
     l_day = sorted(data['Time Series (Daily)'])[-1]
@@ -33,12 +33,18 @@ def find_low(data):
     return lowest
 
 def recommendation(data):
+    global reason
     high = find_high(data)
     low = find_low(data)
     l_day = get_latest_day(data)
-    if float(data['Time Series (Daily)'][latest_day]['4. close']) < (0.2*low):
+    if float(data['Time Series (Daily)'][l_day]['4. close']) < (1.2*low):
+        reason = "Closing price is within 20% of recent low."
         return "BUY"
-    return "SELL"
+    elif float(data['Time Series (Daily)'][l_day]['4. close']) > (0.8*high):
+        reason = "Closing price is within 20% of recent high."
+        return "SELL"
+    reason = "Closing price is neither low nor high enough to buy or sell."
+    return "NEITHER BUY OR SELL"
 
 #variables
 user_input = ""
@@ -87,7 +93,6 @@ while user_input != "000":
                 last_refreshed = stock_data['Meta Data']['3. Last Refreshed']
                 latest_day = get_latest_day(stock_data)
                 latest_close = stock_data['Time Series (Daily)'][latest_day]['4. close']
-
                 recent_high = find_high(stock_data)
                 recent_low = find_low(stock_data)
 
@@ -107,7 +112,7 @@ while user_input != "000":
                 print("RECENT LOW:", recent_low)
                 print("-------------------------")
                 print("RECOMMENDATION:", rec)
-                print("RECOMMENDATION REASON:")
+                print("RECOMMENDATION REASON:", reason)
                 print("-------------------------")
                 print("HAPPY INVESTING!")
                 print("-------------------------")

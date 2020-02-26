@@ -2,3 +2,4 @@ requests
 python-dotenv
 alpha_vantage
 pandas
+matplotlib
