@@ -48,6 +48,9 @@ def recommendation(data):
     reason = "Closing price is neither low nor high enough to buy or sell."
     return "NEITHER BUY OR SELL"
 
+def to_usd(num):
+    return str('$' + format(num, ',.2f'))
+
 #variables
 user_input = ""
 key = ""
@@ -63,6 +66,12 @@ print("-------------------")
 print("  STOCK INFO APP   ")
 print("-------------------")
 
+
+os.environ["ALPHAVANTAGE_API_KEY"] = input("Please provide your API key: ")
+load_dotenv()
+key = os.environ["ALPHAVANTAGE_API_KEY"]
+print("---------------\n")
+
 user_input = input("Please enter an IPO: ")
 
 while user_input != "000": 
@@ -76,11 +85,6 @@ while user_input != "000":
         if length_check.upper() == "Y":
             print("You entered:", user_input)
             user_input = user_input.upper()
-            os.environ["ALPHAVANTAGE_API_KEY"] = input("Please provide your API key: ")
-            load_dotenv()
-            key = os.environ["ALPHAVANTAGE_API_KEY"]
-            print("Your key is:", key)
-            print("---------------\n")
             output_size = "compact"
             request_url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=" + user_input + "&outputsize=" + output_size + "&apikey=" + key
             response = requests.get(request_url)
@@ -97,9 +101,9 @@ while user_input != "000":
                 
                 last_refreshed = stock_data['Meta Data']['3. Last Refreshed']
                 latest_day = get_latest_day(stock_data)
-                latest_close = stock_data['Time Series (Daily)'][latest_day]['4. close']
-                recent_high = find_high(stock_data)
-                recent_low = find_low(stock_data)
+                latest_close = float(stock_data['Time Series (Daily)'][latest_day]['4. close'])
+                recent_high = float(find_high(stock_data))
+                recent_low = float(find_low(stock_data))
 
                 #recommendation
                 rec = recommendation(stock_data)
@@ -123,9 +127,9 @@ while user_input != "000":
                 print("REQUEST AT:", time_of_request.ctime() )
                 print("-------------------------")
                 print("LATEST DAY:", latest_day)
-                print("LATEST CLOSE:", latest_close)
-                print("RECENT HIGH:", recent_high)
-                print("RECENT LOW:", recent_low)
+                print("LATEST CLOSE:", to_usd(latest_close))
+                print("RECENT HIGH:", to_usd(recent_high))
+                print("RECENT LOW:", to_usd(recent_low))
                 print("-------------------------")
                 plt.show()
                 print("RECOMMENDATION:", rec)
