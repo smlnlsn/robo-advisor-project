@@ -11,6 +11,7 @@ import requests
 import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 
 def get_latest_day(data):
     l_day = sorted(data['Time Series (Daily)'])[-1]
@@ -36,12 +37,13 @@ def recommendation(data):
     global reason
     high = find_high(data)
     low = find_low(data)
-    l_day = get_latest_day(data)
-    if float(data['Time Series (Daily)'][l_day]['4. close']) < (1.2*low):
-        reason = "Closing price is within 20% of recent low."
+    difference = high - low
+    today_closing = float(data['Time Series (Daily)'][get_latest_day(data)]['4. close'])
+    if today_closing < ((difference*0.2)+low):
+        reason = "Closing price is relatively low."
         return "BUY"
-    elif float(data['Time Series (Daily)'][l_day]['4. close']) > (0.8*high):
-        reason = "Closing price is within 20% of recent high."
+    elif today_closing > (high-(difference*0.2)):
+        reason = "Closing price is relatively high."
         return "SELL"
     reason = "Closing price is neither low nor high enough to buy or sell."
     return "NEITHER BUY OR SELL"
@@ -51,6 +53,7 @@ user_input = ""
 key = ""
 request_url = ""
 length_check = "Y"
+closing_prices = []
 
 #APP BEGINS
 os.system('clear')  
@@ -66,12 +69,14 @@ while user_input != "000":
     if user_input.isalpha():
         length_check = "Y"
         stock_data = ""
+        closing_prices = []
+        #dates = [] #no longer used, enable if showing dates as ticks
         if len(user_input) >= 6:
             length_check = input("Your IPO code is pretty long. Are you sure it's correct? (Y/N): ")
         if length_check.upper() == "Y":
             print("You entered:", user_input)
             user_input = user_input.upper()
-            #os.environ["ALPHAVANTAGE_API_KEY"] = input("Please provide your API key: ")
+            os.environ["ALPHAVANTAGE_API_KEY"] = input("Please provide your API key: ")
             load_dotenv()
             key = os.environ["ALPHAVANTAGE_API_KEY"]
             print("Your key is:", key)
@@ -99,6 +104,17 @@ while user_input != "000":
                 #recommendation
                 rec = recommendation(stock_data)
 
+                #for day in stock_data['Time Series (Daily)'].keys():
+                #   dates.append(day)
+                for day in stock_data['Time Series (Daily)'].values():
+                    closing_prices.append(float(day['4. close']))
+                
+                #format plot
+                plt.plot(closing_prices)
+                plt.title("Last 100 days for " + user_input.upper())
+                plt.axis([0,100,0,recent_high*1.2])
+                plt.xlabel("Days Ago")
+
                 #output
                 print("-------------------------")
                 print("SELECTED SYMBOL:", stock_data['Meta Data']['2. Symbol'])
@@ -111,6 +127,7 @@ while user_input != "000":
                 print("RECENT HIGH:", recent_high)
                 print("RECENT LOW:", recent_low)
                 print("-------------------------")
+                plt.show()
                 print("RECOMMENDATION:", rec)
                 print("RECOMMENDATION REASON:", reason)
                 print("-------------------------")
