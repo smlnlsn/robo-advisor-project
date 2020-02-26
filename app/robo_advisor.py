@@ -10,17 +10,35 @@ import json
 import requests
 import pandas as pd
 import datetime
-import ast
 #from alpha_vantage.timeseries import TimeSeries
 
+def get_latest_day(data):
+    l_day = sorted(data['Time Series (Daily)'])[-1]
+    return l_day
+
 def find_high(data):
-    return 0
+    day = get_latest_day(data)[-2:]
+    highest = float(data['Time Series (Daily)']['2020-02-' + day]['2. high'])
+    for day in data['Time Series (Daily)'].values():
+        if float(day['2. high']) > highest:
+            highest = float(day['2. high'])
+    return highest
         
 def find_low(data):
-    return 0
+    day = get_latest_day(data)[-2:]
+    lowest = float(data['Time Series (Daily)']['2020-02-' + day]['3. low'])
+    for day in data['Time Series (Daily)'].values():
+        if float(day['3. low']) < lowest:
+            lowest = float(day['3. low'])
+    return lowest
 
 def recommendation(data):
-    return 0
+    high = find_high(data)
+    low = find_low(data)
+    l_day = get_latest_day(data)
+    if float(data['Time Series (Daily)'][latest_day]['4. close']) < (0.2*low):
+        return "BUY"
+    return "SELL"
 
 #variables
 user_input = ""
@@ -29,7 +47,7 @@ request_url = ""
 length_check = "Y"
 
 #APP BEGINS
-os.system('clear')
+os.system('clear')  
 
 
 print("-------------------")
@@ -67,7 +85,7 @@ while user_input != "000":
                 df.to_csv(r"%s" % file_path)
                 
                 last_refreshed = stock_data['Meta Data']['3. Last Refreshed']
-                latest_day = '2020-02-24' #TO-DO: make dynamic
+                latest_day = get_latest_day(stock_data)
                 latest_close = stock_data['Time Series (Daily)'][latest_day]['4. close']
 
                 recent_high = find_high(stock_data)
@@ -88,7 +106,7 @@ while user_input != "000":
                 print("RECENT HIGH:", recent_high)
                 print("RECENT LOW:", recent_low)
                 print("-------------------------")
-                print("RECOMMENDATION:")
+                print("RECOMMENDATION:", rec)
                 print("RECOMMENDATION REASON:")
                 print("-------------------------")
                 print("HAPPY INVESTING!")
